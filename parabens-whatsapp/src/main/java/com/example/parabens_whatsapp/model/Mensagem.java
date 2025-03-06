@@ -14,7 +14,9 @@ public class Mensagem {
 
     @Column(name = "data_nascimento")
     private Date dataNascimento;
-    private String telefone; 
+
+    private String telefone;
+
     private String descricao;
     private String mensagemGerada;
     private Date dataEnvio;
