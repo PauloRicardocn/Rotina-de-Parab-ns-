@@ -14,6 +14,38 @@ Além disso, o sistema lê um arquivo **PDF** contendo uma lista de aniversarian
 - **Rotina Automatizada**: Processamento dos dados para verificar a data de aniversário e enviar as mensagens correspondentes.
 
 ---
+## 📂 Estrutura do Projeto
+
+```text
+Rotina-de-Parabens/
+│
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── exemplo/
+│   │   │           ├── controller/
+│   │   │           │   └── ParabensController.java
+│   │   │           ├── model/
+│   │   │           │   └── Mensagem.java
+│   │   │           ├── repository/
+│   │   │           │   └── MensagemRepository.java
+│   │   │           ├── service/
+│   │   │           │   ├── OpenAiService.java
+│   │   │           │   ├── PdfService.java
+│   │   │           │   └── WhatsappService.java
+│   │   │           └── RotinaDeParabensApplication.java
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       └── static/
+│   │
+├── .gitignore
+├── pom.xml
+├── README.md
+└── lista_aniversariantes.pdf
+```
+
+
 
 ## ✅ Requisitos
 
@@ -73,6 +105,53 @@ Copie a chave gerada (API Key) e salve em local seguro.
 
 ---
 
+### 📄 Exemplo do conteúdo do PDF:
+``Nome: João Silva``
+
+``Data de Nascimento: 15/03/1990 ``
+
+``Telefone: +5511999999999 ``
+
+``Descrição: João gosta de futebol e tecnologia.``
+
+---
+``Nome: Maria Oliveira``
+
+``Data de Nascimento: 22/07/1985`` 
+
+``Telefone: +5511988888888 ``
+
+``Descrição: Maria adora viagens e gastronomia.``
+
+---
+``Nome: Pedro Santos ``
+
+``Data de Nascimento: 10/11/1992`` 
+
+``Telefone: +5511977777777 ``
+
+``Descrição: Pedro é apaixonado por música e cinema.``
+
+
+## 📝 Regras para o PDF funcionar corretamente no sistema:
+
+Cada aniversariante deve ter esses 4 campos:
+
+Nome
+
+Data de Nascimento (no formato dd/MM/yyyy)
+
+Telefone (com o código do país, exemplo: +55 para Brasil)
+
+Descrição (um pequeno texto para personalizar a mensagem)
+
+Separar os aniversariantes com uma linha em branco.
+
+O texto deve ser digitado no PDF como texto editável, não como imagem escaneada.
+
+O PDF pode ser criado facilmente com um editor de texto (como Word ou Google Docs), seguindo essa estrutura e exportando para PDF.
+
+---
 ## ⚙️ Configuração
 
 Clone o repositório:
@@ -118,10 +197,15 @@ Esse endpoint processará o PDF, gerará as mensagens personalizadas e enviará 
 
 ## 🧰 Exemplo no Postman:
 Abra o Postman.
+
 Crie uma nova requisição.
+
 Método: GET
+
 URL: http://localhost:8080/parabens/enviar
+
 Clique em Send.
+
 Verifique a resposta e acompanhe os envios no seu console/log.
 
 ---
