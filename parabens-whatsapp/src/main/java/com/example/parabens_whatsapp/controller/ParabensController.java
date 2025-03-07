@@ -29,63 +29,79 @@ public class ParabensController {
     public String enviarParabens() throws Exception {
         // Lê o conteúdo do PDF
         String textoPdf = pdfService.lerPdf("C:/Aniversariante1.pdf");
-        String[] pessoas = textoPdf.split("\n\n"); // Divide o texto em blocos de pessoas
 
-        for (String pessoa : pessoas) {
-            String[] dados = pessoa.split("\n");
+        // Remove cabeçalho inicial se existir
+        textoPdf = textoPdf.replace("Lista de Aniversariantes", "").trim();
 
-            // Remover espaços em branco das linhas
-            for (int i = 0; i < dados.length; i++) {
-                dados[i] = dados[i].trim();
-            }
+        // Dividindo cada pessoa a partir do "Nome: "
+        String[] blocos = textoPdf.split("(?=Nome: )");
 
-            // Debug: imprimir os dados extraídos
-            System.out.println("Processando bloco:");
-            for (String linha : dados) {
-                System.out.println(">" + linha + "<");
-            }
+        System.out.println("Total de pessoas encontradas: " + blocos.length);
 
-            String nome = "";
-            String dataStr = "";
-            String telefone = "";
-            String descricao = "";
-
-            // Extração dos dados
-            for (String linha : dados) {
-                if (linha.startsWith("Nome: ")) {
-                    nome = linha.replace("Nome: ", "").trim();
-                } else if (linha.startsWith("Data de Nascimento: ")) {
-                    dataStr = linha.replace("Data de Nascimento: ", "").trim();
-                } else if (linha.startsWith("Telefone: ")) {
-                    telefone = linha.replace("Telefone: ", "").trim();
-                } else if (linha.startsWith("Descrição: ")) {
-                    descricao = linha.replace("Descrição: ", "").trim();
-                }
-            }
-
-            // Valida se todos os campos foram preenchidos
-            if (nome.isEmpty() || dataStr.isEmpty() || telefone.isEmpty() || descricao.isEmpty()) {
-                System.err.println("Dados incompletos para: " + pessoa);
-                continue; // pula para o próximo
-            }
-
-            // Conversão da data de nascimento
-            Date dataNascimento;
+        for (String bloco : blocos) {
             try {
-                dataNascimento = new SimpleDateFormat("dd/MM/yyyy").parse(dataStr);
-            } catch (ParseException e) {
-                System.err.println("Data inválida para " + nome + ": " + dataStr);
-                continue; // pula para o próximo
+                String[] dados = bloco.split("\n");
+
+                String nome = "";
+                String dataStr = "";
+                String telefone = "";
+                StringBuilder descricao = new StringBuilder();
+
+                for (String linha : dados) {
+                    linha = linha.trim();
+                    if (linha.startsWith("Nome: ")) {
+                        nome = linha.replace("Nome: ", "").trim();
+                    } else if (linha.startsWith("Data de Nascimento: ")) {
+                        dataStr = linha.replace("Data de Nascimento: ", "").trim();
+                    } else if (linha.startsWith("Telefone: ")) {
+                        telefone = linha.replace("Telefone: ", "").trim();
+                    } else if (linha.startsWith("Descrição: ")) {
+                        descricao.append(linha.replace("Descrição: ", "").trim());
+                    } else if (!linha.isEmpty()) {
+                        descricao.append(" ").append(linha);
+                    }
+                }
+
+                if (nome.isEmpty() || dataStr.isEmpty() || telefone.isEmpty() || descricao.isEmpty()) {
+                    System.err.println("⚠️ Dados incompletos para:\n" + bloco);
+                    continue;
+                }
+
+                Date dataNascimento;
+                try {
+                    dataNascimento = new SimpleDateFormat("dd/MM/yyyy").parse(dataStr);
+                } catch (ParseException e) {
+                    System.err.println("⚠️ Data inválida para " + nome + ": " + dataStr);
+                    continue;
+                }
+
+                // Gera mensagem personalizada
+                String mensagem = openAIService.gerarMensagem(descricao.toString());
+
+                System.out.println("✅ Enviando mensagem para " + nome + " (" + telefone + ")");
+
+                try {
+                    String resposta = whatsAppService.enviarMensagem(
+                        telefone,
+                        nome,
+                        dataNascimento,
+                        descricao.toString(),
+                        mensagem
+                    );
+                    System.out.println("📩 Resposta da API para " + nome + ": " + resposta);
+                } catch (Exception e) {
+                    System.err.println("❌ Falha ao enviar mensagem para " + nome + ": " + e.getMessage());
+                    e.printStackTrace();
+                    continue;
+                }
+
+            } catch (Exception e) {
+                System.err.println("❌ Erro inesperado ao processar pessoa:\n" + bloco);
+                e.printStackTrace();
             }
-
-            // Gera a mensagem personalizada com OpenAI
-            String mensagem = openAIService.gerarMensagem(descricao);
-
-            // Envia a mensagem via Z-API
-            String resposta = whatsAppService.enviarMensagem(telefone, mensagem);
-            System.out.println("Resposta da API para " + nome + ": " + resposta);
         }
 
-        return "Mensagens enviadas e salvas com sucesso!";
+        System.out.println("\n✅ Processo concluído!");
+        return "Mensagens enviadas e processadas com sucesso!";
     }
 }
