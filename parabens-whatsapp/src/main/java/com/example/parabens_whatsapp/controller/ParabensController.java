@@ -63,7 +63,7 @@ public class ParabensController {
                 }
 
                 if (nome.isEmpty() || dataStr.isEmpty() || telefone.isEmpty() || descricao.isEmpty()) {
-                    System.err.println("⚠️ Dados incompletos para:\n" + bloco);
+                    System.err.println(" Dados incompletos para:\n" + bloco);
                     continue;
                 }
 
@@ -71,14 +71,14 @@ public class ParabensController {
                 try {
                     dataNascimento = new SimpleDateFormat("dd/MM/yyyy").parse(dataStr);
                 } catch (ParseException e) {
-                    System.err.println("⚠️ Data inválida para " + nome + ": " + dataStr);
+                    System.err.println(" Data inválida para " + nome + ": " + dataStr);
                     continue;
                 }
 
                 // Gera mensagem personalizada
                 String mensagem = openAIService.gerarMensagem(descricao.toString());
 
-                System.out.println("✅ Enviando mensagem para " + nome + " (" + telefone + ")");
+                System.out.println("Enviando mensagem para " + nome + " (" + telefone + ")");
 
                 try {
                     String resposta = whatsAppService.enviarMensagem(
@@ -88,20 +88,20 @@ public class ParabensController {
                         descricao.toString(),
                         mensagem
                     );
-                    System.out.println("📩 Resposta da API para " + nome + ": " + resposta);
+                    System.out.println(" Resposta da API para " + nome + ": " + resposta);
                 } catch (Exception e) {
-                    System.err.println("❌ Falha ao enviar mensagem para " + nome + ": " + e.getMessage());
+                    System.err.println(" Falha ao enviar mensagem para " + nome + ": " + e.getMessage());
                     e.printStackTrace();
                     continue;
                 }
 
             } catch (Exception e) {
-                System.err.println("❌ Erro inesperado ao processar pessoa:\n" + bloco);
+                System.err.println(" Erro inesperado ao processar pessoa:\n" + bloco);
                 e.printStackTrace();
             }
         }
 
-        System.out.println("\n✅ Processo concluído!");
+        System.out.println("\n Processo concluído!");
         return "Mensagens enviadas e processadas com sucesso!";
     }
 }
