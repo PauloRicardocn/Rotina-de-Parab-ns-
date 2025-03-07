@@ -1,66 +1,58 @@
 package com.exemplo.service;
 
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import com.twilio.type.PhoneNumber;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import java.util.Date;
-import java.util.regex.Pattern;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class WhatsAppService {
 
-    @Value("${twilio.account.sid}")
-    private String accountSid;
+    @Value("${zapi.session.id}")
+    private String sessionId;
 
-    @Value("${twilio.auth.token}")
-    private String authToken;
+    @Value("${zapi.token}")
+    private String token;
 
-    @Value("${twilio.whatsapp.from}")
-    private String fromNumber;
+    @Value("${zapi.client.token}")
+    private String clientToken;
 
-    public void enviarMensagem(String telefone, String nome, Date dataNascimento, String descricao, String mensagemGerada) {
-        Twilio.init(accountSid, authToken);
+    private static final String API_URL = "https://api.z-api.io/";
 
-        // Validar e formatar número de telefone
+    public String enviarMensagem(String telefone, String mensagem) {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = API_URL + "instances/" + sessionId + "/token/" + token + "/send-text";
+
+        // Formatar número (remover espaços e garantir código do país)
         telefone = formatarNumero(telefone);
-        if (telefone == null) {
-            System.err.println("Número de telefone inválido para " + nome);
-            return;
-        }
 
-        try {
-            Message message = Message.creator(
-                new PhoneNumber("whatsapp:" + telefone),
-                new PhoneNumber("whatsapp:" + fromNumber),
-                mensagemGerada
-            ).create();
+        // Criar corpo da requisição
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("phone", telefone);
+        requestBody.put("message", mensagem);
 
-            System.out.println("Mensagem enviada com sucesso para " + nome + " (" + telefone + ")");
-        } catch (Exception e) {
-            System.err.println("Erro ao enviar mensagem para " + nome + ": " + e.getMessage());
-        }
+        // Configurar cabeçalhos da requisição
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+        headers.set("Client-Token", clientToken);
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
+
+        // Enviar requisição POST
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+        return response.getBody();
     }
 
     private String formatarNumero(String telefone) {
-        if (telefone == null || telefone.isEmpty()) {
-            return null;
-        }
-
-        // Remover espaços e caracteres especiais
         telefone = telefone.replaceAll("[^\\d+]", "");
-
-        // Adicionar código do país se necessário
         if (!telefone.startsWith("+")) {
-            telefone = "+55" + telefone;
+            telefone = "+55" + telefone; // Adiciona o código do Brasil caso não tenha
         }
-
-        // Verificar se o número tem entre 12 e 15 dígitos após formatação
-        if (!Pattern.matches("\\+\\d{11,14}", telefone)) {
-            return null;
-        }
-
         return telefone;
     }
 }
