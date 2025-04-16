@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Arrays;
 
 @Service
 public class OpenAIService {
@@ -19,9 +18,9 @@ public class OpenAIService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String gerarMensagem(String descricao) {
+    public String gerarMensagem(String nome, String descricao) {
         String url = "https://api.openai.com/v1/chat/completions";
-        String prompt = "Escreva uma mensagem de parabéns para alguém que " + descricao;
+        String prompt = "Crie uma mensagem de Boa tarde para" + nome + descricao + "dizendo que essa é uma mensagem automatica criada pela ZCOM- Automação de Comunicações Digitais feita por Paulo Ricardo";
 
         Map<String, Object> message = new HashMap<>();
         message.put("role", "user");

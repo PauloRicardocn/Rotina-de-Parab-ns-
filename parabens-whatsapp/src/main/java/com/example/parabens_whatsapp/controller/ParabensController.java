@@ -1,5 +1,7 @@
 package com.exemplo.controller;
 
+import com.exemplo.model.Contato;
+import com.exemplo.service.ExcelService;
 import com.exemplo.service.PdfService;
 import com.exemplo.service.OpenAIService;
 import com.exemplo.service.WhatsAppService;
@@ -8,9 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.File;
+import java.util.List;
 
 @RestController
 @RequestMapping("/parabens")
@@ -20,6 +21,9 @@ public class ParabensController {
     private PdfService pdfService;
 
     @Autowired
+    private ExcelService excelService;
+
+    @Autowired
     private OpenAIService openAIService;
 
     @Autowired
@@ -27,81 +31,69 @@ public class ParabensController {
 
     @GetMapping("/enviar")
     public String enviarParabens() throws Exception {
-        // Lê o conteúdo do PDF
-        String textoPdf = pdfService.lerPdf("C:/Aniversariante1.pdf");
+        // Caminho do arquivo local
+        String filePath = "C:/Amigos_novo1.xlsx"; 
 
-        // Remove cabeçalho inicial se existir
-        textoPdf = textoPdf.replace("Lista de Aniversariantes", "").trim();
+        // Verificar se o arquivo existe
+        File file = new File(filePath);
+        if (!file.exists() || !file.isFile()) {
+            return "Arquivo não encontrado no caminho: " + filePath;
+        }
 
-        // Dividindo cada pessoa a partir do "Nome: "
-        String[] blocos = textoPdf.split("(?=Nome: )");
+        // Verificar o tipo do arquivo (PDF ou Excel)
+        String contentType = getContentType(file);
+        List<Contato> contatos;
 
-        System.out.println("Total de pessoas encontradas: " + blocos.length);
+        if ("application/pdf".equals(contentType)) {
+            contatos = pdfService.lerPdf(file); // Passe o File diretamente
+        } else if ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".equals(contentType)) {
+            contatos = excelService.lerExcel(file); // Passe o File diretamente
+        } else {
+            return "Formato de arquivo não suportado!";
+        }
 
-        for (String bloco : blocos) {
+        System.out.println("Total de pessoas encontradas: " + contatos.size());
+
+        // Processa cada contato
+        for (Contato contato : contatos) {
+            if (contato.getNome().isEmpty() || contato.getTelefone().isEmpty()) {
+                System.err.println("Dados incompletos para: " + contato);
+                continue;
+            }
+
+            String mensagem = openAIService.gerarMensagem(contato.getNome(), contato.getDescricao());
+
+            System.out.println("Enviando mensagem para " + contato.getNome() + " (" + contato.getTelefone() + ")");
+
             try {
-                String[] dados = bloco.split("\n");
-
-                String nome = "";
-                String dataStr = "";
-                String telefone = "";
-                StringBuilder descricao = new StringBuilder();
-
-                for (String linha : dados) {
-                    linha = linha.trim();
-                    if (linha.startsWith("Nome: ")) {
-                        nome = linha.replace("Nome: ", "").trim();
-                    } else if (linha.startsWith("Data de Nascimento: ")) {
-                        dataStr = linha.replace("Data de Nascimento: ", "").trim();
-                    } else if (linha.startsWith("Telefone: ")) {
-                        telefone = linha.replace("Telefone: ", "").trim();
-                    } else if (linha.startsWith("Descrição: ")) {
-                        descricao.append(linha.replace("Descrição: ", "").trim());
-                    } else if (!linha.isEmpty()) {
-                        descricao.append(" ").append(linha);
-                    }
-                }
-
-                if (nome.isEmpty() || dataStr.isEmpty() || telefone.isEmpty() || descricao.isEmpty()) {
-                    System.err.println(" Dados incompletos para:\n" + bloco);
-                    continue;
-                }
-
-                Date dataNascimento;
-                try {
-                    dataNascimento = new SimpleDateFormat("dd/MM/yyyy").parse(dataStr);
-                } catch (ParseException e) {
-                    System.err.println(" Data inválida para " + nome + ": " + dataStr);
-                    continue;
-                }
-
-                // Gera mensagem personalizada
-                String mensagem = openAIService.gerarMensagem(descricao.toString());
-
-                System.out.println("Enviando mensagem para " + nome + " (" + telefone + ")");
-
-                try {
-                    String resposta = whatsAppService.enviarMensagem(
-                        telefone,
-                        nome,
-                        dataNascimento,
-                        descricao.toString(),
-                        mensagem
-                    );
-                    System.out.println(" Resposta da API para " + nome + ": " + resposta);
-                } catch (Exception e) {
-                    System.err.println(" Falha ao enviar mensagem para " + nome + ": " + e.getMessage());
-                    e.printStackTrace();
-                    continue;
-                }
-
+                String resposta = whatsAppService.enviarMensagem(
+                    contato.getTelefone(),
+                    contato.getNome(),
+                    contato.getDataNascimento(),
+                    contato.getDescricao(),
+                    mensagem
+                );
+                System.out.println("Resposta da API para " + contato.getNome() + ": " + resposta);
             } catch (Exception e) {
-                System.err.println(" Erro inesperado ao processar pessoa:\n" + bloco);
+                System.err.println("Falha ao enviar mensagem para " + contato.getNome() + ": " + e.getMessage());
                 e.printStackTrace();
+                continue;
             }
         }
 
-        System.out.println("\n Processo concluído!");
+        System.out.println("\nProcesso concluído!");
         return "Mensagens enviadas e processadas com sucesso!";
     }
+
+    private String getContentType(File file) {
+        // Método para determinar o tipo de arquivo (PDF ou Excel) com base na extensão do arquivo
+        String fileName = file.getName();
+        if (fileName.endsWith(".pdf")) {
+            return "application/pdf";
+        } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        }
+        return "";
+    }
 }
+ 

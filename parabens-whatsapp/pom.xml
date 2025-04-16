@@ -42,13 +42,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Dependência do Twilio -->
-		<dependency>
-			<groupId>com.twilio.sdk</groupId>
-			<artifactId>twilio</artifactId>
-			<version>8.31.1</version>
-		</dependency>
-
 		<!-- Dependência do Apache PDFBox -->
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
@@ -70,6 +63,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.3</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
