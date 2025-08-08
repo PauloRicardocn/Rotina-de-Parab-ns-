@@ -1,6 +1,7 @@
 package com.exemplo.service;
 
 
+
 import com.exemplo.model.Contato;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -46,10 +47,6 @@ public class PdfService {
                         dataStr = linha.replace("Data de Nascimento: ", "").trim();
                     } else if (linha.startsWith("Telefone: ")) {
                         contato.setTelefone(linha.replace("Telefone: ", "").trim());
-                    } else if (linha.startsWith("Descrição: ")) {
-                        contato.setDescricao(linha.replace("Descrição: ", "").trim());
-                    } else if (!linha.isEmpty()) {
-                        contato.setDescricao(contato.getDescricao() + " " + linha);
                     }
                 }
 

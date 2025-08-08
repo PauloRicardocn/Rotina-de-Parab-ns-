@@ -28,14 +28,6 @@ public class Contato {
         this.telefone = telefone;
     }
 
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-
     public Date getDataNascimento() {
         return dataNascimento;
     }

@@ -16,38 +16,46 @@ import java.io.FileInputStream;
 @Service
 public class ExcelService {
 
-    public List<Contato> lerExcel(File file) {
-        List<Contato> contatos = new ArrayList<>();
+   public List<Contato> lerExcel(File file) {
+    List<Contato> contatos = new ArrayList<>();
 
-        try (InputStream inputStream = new FileInputStream(file);
-             Workbook workbook = WorkbookFactory.create(inputStream)) {
+    try (InputStream inputStream = new FileInputStream(file);
+         Workbook workbook = WorkbookFactory.create(inputStream)) {
 
-            Sheet sheet = workbook.getSheetAt(0);
+        Sheet sheet = workbook.getSheetAt(0);
 
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue; // Pular cabeçalho
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) continue; // Pular cabeçalho
 
-                Contato contato = new Contato();
-                contato.setNome(row.getCell(0).getStringCellValue());
+            Contato contato = new Contato();
+            Cell nomeCell = row.getCell(0);
+            contato.setNome(nomeCell != null ? nomeCell.getStringCellValue().trim() : "");
 
-                // Tratando a data de nascimento
-                Cell dataCell = row.getCell(1);
-                if (dataCell != null && dataCell.getCellType() == CellType.NUMERIC) {
-                    contato.setDataNascimento(dataCell.getDateCellValue());
-                } else if (dataCell != null && dataCell.getCellType() == CellType.STRING) {
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                    contato.setDataNascimento(format.parse(dataCell.getStringCellValue()));
-                }
-
-                contato.setTelefone(row.getCell(2).getStringCellValue());
-                contato.setDescricao(row.getCell(3).getStringCellValue());
-
-                contatos.add(contato);
+            // Tratando a data de nascimento
+            Cell dataCell = row.getCell(1);
+            if (dataCell != null && dataCell.getCellType() == CellType.NUMERIC) {
+                contato.setDataNascimento(dataCell.getDateCellValue());
+            } else if (dataCell != null && dataCell.getCellType() == CellType.STRING) {
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                contato.setDataNascimento(format.parse(dataCell.getStringCellValue()));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        return contatos;
+            // Telefone (corrigido)
+            Cell telefoneCell = row.getCell(2);
+            if (telefoneCell != null) {
+                if (telefoneCell.getCellType() == CellType.STRING) {
+                    contato.setTelefone(telefoneCell.getStringCellValue());
+                } else if (telefoneCell.getCellType() == CellType.NUMERIC) {
+                    contato.setTelefone(String.valueOf((long) telefoneCell.getNumericCellValue()));
+                }
+            }
+
+            contatos.add(contato);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    return contatos;
+}
 }

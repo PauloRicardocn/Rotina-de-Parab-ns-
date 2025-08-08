@@ -18,9 +18,12 @@ public class OpenAIService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String gerarMensagem(String nome, String descricao) {
+    public String gerarMensagem(String nome) {
         String url = "https://api.openai.com/v1/chat/completions";
-        String prompt = "Crie uma mensagem de Boa tarde para" + nome + descricao + "dizendo que essa é uma mensagem automatica criada pela ZCOM- Automação de Comunicações Digitais feita por Paulo Ricardo";
+        String prompt = "Quero que você mande essa mensagem como está escrito para " + nome + ": " +
+                " Obrigado pela sua compra! Que seus novos óculos tragam ainda mais estilo, " +
+                "conforto e personalidade ao seu dia a dia. Foi um prazer ter você como cliente, conte sempre com a gente! " +
+                "Óticas Gracinhas Currais Novos.";
 
         Map<String, Object> message = new HashMap<>();
         message.put("role", "user");
