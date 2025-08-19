@@ -12,8 +12,6 @@
 
         private String nome;
 
-        @Column(name = "data_nascimento")
-        private Date dataNascimento;
 
         private String telefone;
 
@@ -38,13 +36,6 @@
             this.nome = nome;
         }
 
-        public Date getDataNascimento() {
-            return dataNascimento;
-        }
-
-        public void setDataNascimento(Date dataNascimento) {
-            this.dataNascimento = dataNascimento;
-        }
 
         public String getTelefone() {
             return telefone;

@@ -28,14 +28,13 @@ public class MensagemService {
     }
 
 public String mensagemVideo(String nome) {
-    return "Olá " + nome + "! Tudo bem? 🥰\n\n" +
-           "Seu pai sempre cuidou de você com carinho\n" +
-           "Agora é sua vez de retribuir!\n\n" +
-           "👓 O presente ideal está nas Óticas Gracinha:\n" +
-           "✨ 30% de desconto à vista\n" +
-           "✨ 15% no cartão em até 3x\n\n" +
-           "Neste Dia dos Pais, mostre o quanto ele é especial.\n" +
-           "💙 Vem escolher com a gente!";
+    return nome + ", VOLTEI DA LICENÇA!!!\n\n" +
+           "*OFERTA DO ANO:*\n\n" +
+           "📢 Você vai comprar o seu *CARRO* 🚘 ou construir/comprar seu *IMÓVEL* 🏡 nos próximos meses?\n\n" +
+           "Ou *DESEJA QUITAR SEU FINANCIAMENTO IMOBILIÁRIO?*\n\n" +
+           "Eu tenho a oferta certa pra você!\n\n" +
+           "💥 Fale comigo agora e descubra:\n" +
+           "*AS CONDIÇÕES DO ANO – PORTOBANK*";
 }
 
 }

@@ -35,19 +35,8 @@ public class WhatsAppService {
     private static final String API_URL = "https://api.z-api.io/";
 
    List<String> midiasUrl = List.of(
-    "https://drive.google.com/uc?export=download&id=1-Wte_kePo1TDQsvrobDKrBqvDIsZDmJE",
-    "https://drive.google.com/uc?export=download&id=1HbYo6mBSmRev_UU-DyH5WBJTQzh1JchZ",
-    "https://drive.google.com/uc?export=download&id=1v8bwC4zQMdt2OpDvAYDSoqk2B_XGsWuR",
-    "https://drive.google.com/uc?export=download&id=1jIfmO2ASKPqmZ8hCtgnjEC88idrrnbwn",
-    "https://drive.google.com/uc?export=download&id=1NZIvPHS-GrqN8bomUhh7qrrrU-UXadm2",
-    "https://drive.google.com/uc?export=download&id=14HU6PP5Am95AdBOc_KsbEfIxSL7c3OMp",
-    "https://drive.google.com/uc?export=download&id=1QnPBLoJDqR7gM8aZtpzqdqGOWI1eGg0n",
-    "https://drive.google.com/uc?export=download&id=16B_RxSa2U0Z6L1WMgXcDOcTpeeO7pFmH",
-    "https://drive.google.com/uc?export=download&id=1yOt3pnCNSt0984ZIYAQnvzWkuvi1xz5S",
-    "https://drive.google.com/uc?export=download&id=1jmsRBmN2NGlv0AhhmB16koRuDo0-quoh",
-    "https://drive.google.com/uc?export=download&id=1rzJjH0zgsvLtXFiCY0vAWCXSoNgXBclV",
-    "https://drive.google.com/uc?export=download&id=115-gqKixL0cD7vMx2WD-cV7autRTJ7xZ"
-
+    "https://drive.google.com/uc?export=download&id=1iV8pD5Tdcv2P89iNf4S_xhuTPVZaXxlo",
+    "https://drive.google.com/uc?export=download&id=1F7MTcsxVCEaCdVlgRE7EKHBoeepY3WzV"
 );
 
 public List<String> getMidiasUrl() {
@@ -57,7 +46,7 @@ public List<String> getMidiasUrl() {
 
 
 
-    public String enviarMensagem(String telefone, String nome, Date dataNascimento, String mensagemGerada) {
+    public String enviarMensagem(String telefone, String nome, String mensagemGerada) {
         RestTemplate restTemplate = new RestTemplate();
         String url = API_URL + "instances/" + sessionId + "/token/" + token + "/send-text";
 
@@ -77,7 +66,6 @@ public List<String> getMidiasUrl() {
         // Salvar a mensagem no banco de dados
         Mensagem mensagem = new Mensagem();
         mensagem.setNome(nome);
-        mensagem.setDataNascimento(dataNascimento);
         mensagem.setTelefone(telefone);
         mensagem.setMensagemGerada(mensagemGerada);
         mensagem.setDescricao("Mensagem automática enviada pelo sistema da Otica.");

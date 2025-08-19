@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.StringUtils;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -87,7 +89,6 @@ public class ParabensController {
                 String resposta = whatsAppService.enviarMensagem(
                     contato.getTelefone(),
                     contato.getNome(),
-                    contato.getDataNascimento(),
                     mensagem
                 );
                 System.out.printf("[%d/%d] Enviado para: %s\n", i + 1, totalMensagens, contato.getNome());
@@ -162,7 +163,6 @@ public class ParabensController {
                 String resposta = whatsAppService.enviarMensagem(
                     contato.getTelefone(),
                     contato.getNome(),
-                    contato.getDataNascimento(),
                     mensagem
                 );
                 System.out.println("Resposta da API para " + contato.getNome() + ": " + resposta);
@@ -179,7 +179,7 @@ public class ParabensController {
 
    @GetMapping("/video")
 public String enviarComVideo() throws Exception {
-    String filePath = "C:/Vaquejada.xlsx";
+    String filePath = "C:/Cópia de Hoje.xlsx";
 
     File file = new File(filePath);
     if (!file.exists() || !file.isFile()) {
@@ -200,8 +200,8 @@ public String enviarComVideo() throws Exception {
     int totalMensagens = contatos.size();
     System.out.println("Total de pessoas encontradas: " + totalMensagens);
 
-    int tempoMinimoPorEnvio = 35000; // 35s
-    int tempoMaximoPorEnvio = 45000; // 55s
+    int tempoMinimoPorEnvio = 20000; // 35s
+    int tempoMaximoPorEnvio = 30000; // 55s
 
     long tempoInicio = System.currentTimeMillis();
     Random random = new Random();
@@ -209,10 +209,10 @@ public String enviarComVideo() throws Exception {
     for (int i = 0; i < totalMensagens; i++) {
         Contato contato = contatos.get(i);
 
-        if (contato.getTelefone().isEmpty()) {
+        if (!StringUtils.hasText(contato.getTelefone())) {
             System.err.println("Dados incompletos para: " + contato);
             continue;
-        }
+}
 
         // 1) Enviar primeiro só o texto (legenda personalizada)
         String legendaPersonalizada = mensagemService.mensagemVideo(contato.getNome());
@@ -222,7 +222,6 @@ public String enviarComVideo() throws Exception {
             whatsAppService.enviarMensagem(
                 contato.getTelefone(),
                 contato.getNome(),
-                contato.getDataNascimento(),
                 legendaPersonalizada
             );
         } catch (Exception e) {

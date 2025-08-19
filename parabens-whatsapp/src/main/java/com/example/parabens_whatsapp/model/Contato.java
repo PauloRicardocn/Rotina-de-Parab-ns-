@@ -5,8 +5,7 @@ import java.util.Date;
 public class Contato {
     private String nome;
     private String telefone;
-    private String descricao;
-    private Date dataNascimento;
+    
 
     // Construtor padrão
     public Contato() {}
@@ -28,11 +27,5 @@ public class Contato {
         this.telefone = telefone;
     }
 
-    public Date getDataNascimento() {
-        return dataNascimento;
-    }
-
-    public void setDataNascimento(Date dataNascimento) {
-        this.dataNascimento = dataNascimento;
-    }
+    
 }

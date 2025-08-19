@@ -50,14 +50,7 @@ public class PdfService {
                     }
                 }
 
-                try {
-                    Date dataNascimento = new SimpleDateFormat("dd/MM/yyyy").parse(dataStr);
-                    contato.setDataNascimento(dataNascimento);
-                } catch (Exception e) {
-                    System.err.println("Erro ao converter data para: " + contato.getNome());
-                    continue;
-                }
-
+                
                 contatos.add(contato);
             }
         } catch (Exception e) {
