@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
@@ -36,7 +37,7 @@ public class ParabensController {
     private final String indiceFile = "ultimoEnviado.txt";
     private final int MAX_POR_DIA = 850;
 
-    // Ler o índice salvo
+    // Método para ler o índice salvo
     private int lerUltimoIndice() {
         try {
             File file = new File(indiceFile);
@@ -48,7 +49,7 @@ public class ParabensController {
         }
     }
 
-    // Salvar índice
+    // Método para salvar o índice
     private void salvarUltimoIndice(int indice) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(indiceFile))) {
             bw.write(String.valueOf(indice));
@@ -57,10 +58,11 @@ public class ParabensController {
         }
     }
 
-    // Envio automático todos os dias úteis às 7h
-    @Scheduled(cron = "0 * * * * * MON-FRI")
+    // Agendado para rodar todos os dias úteis às 7h da manhã
+    @Scheduled(cron = "0 0 7 * * MON-FRI")
     public void enviarVideosDiarios() throws Exception {
 
+        // Ignorar se for final de semana (redundante por cron, mas seguro)
         DayOfWeek dia = LocalDate.now().getDayOfWeek();
         if (dia == DayOfWeek.SATURDAY || dia == DayOfWeek.SUNDAY) return;
 
@@ -130,24 +132,4 @@ public class ParabensController {
 
                 // Barra de progresso
                 long tempoAtual = System.currentTimeMillis();
-                long decorrido = tempoAtual - tempoInicio;
-                int restantes = maxHoje - (i + 1);
-                long estimativaRestante = (decorrido / (i - ultimoEnviado + 1)) * restantes;
-
-                int barraTamanho = 30;
-                int preenchido = (int) ((i - ultimoEnviado + 1) * barraTamanho / (maxHoje - ultimoEnviado));
-                String barra = "[" + "=".repeat(preenchido) + " ".repeat(barraTamanho - preenchido) + "]";
-
-                System.out.printf("Progresso: %s %d%% | ⏱ Estimativa restante: ~%d min\n",
-                        barra,
-                        (i - ultimoEnviado + 1) * 100 / (maxHoje - ultimoEnviado),
-                        estimativaRestante / 60000
-                );
-            }
-        }
-
-        salvarUltimoIndice(maxHoje);
-        System.out.println("✅ Envio diário concluído!");
-    }
-}
-
+                long decorrido = tempoA

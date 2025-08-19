@@ -11,11 +11,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-
 
 @Service
 public class WhatsAppService {
@@ -34,17 +33,14 @@ public class WhatsAppService {
 
     private static final String API_URL = "https://api.z-api.io/";
 
-   List<String> midiasUrl = List.of(
-    "https://drive.google.com/uc?export=download&id=1iV8pD5Tdcv2P89iNf4S_xhuTPVZaXxlo",
-    "https://drive.google.com/uc?export=download&id=1F7MTcsxVCEaCdVlgRE7EKHBoeepY3WzV"
-);
+    List<String> midiasUrl = List.of(
+        "https://drive.google.com/uc?export=download&id=1iV8pD5Tdcv2P89iNf4S_xhuTPVZaXxlo",
+        "https://drive.google.com/uc?export=download&id=1F7MTcsxVCEaCdVlgRE7EKHBoeepY3WzV"
+    );
 
-public List<String> getMidiasUrl() {
-    return this.midiasUrl;
-}
-
-
-
+    public List<String> getMidiasUrl() {
+        return this.midiasUrl;
+    }
 
     public String enviarMensagem(String telefone, String nome, String mensagemGerada) {
         RestTemplate restTemplate = new RestTemplate();
@@ -67,63 +63,59 @@ public List<String> getMidiasUrl() {
         Mensagem mensagem = new Mensagem();
         mensagem.setNome(nome);
         mensagem.setTelefone(telefone);
-        mensagem.setMensagemGerada(mensagemGerada);
-        mensagem.setDescricao("Mensagem automática enviada pelo sistema da Otica.");
-        mensagem.setDataEnvio(new Date());
+        mensagem.setMensagemGerada(mensagemGerada); // Correção aqui
+        mensagem.setDataEnvio(LocalDateTime.now());   // Correção aqui
         mensagemRepository.save(mensagem);
 
         return response.getBody();
     }
 
-   public String enviarVideoParaContato(String telefone, String nome, String legendaPersonalizada, List<String> midiasUrl) {
-    RestTemplate restTemplate = new RestTemplate();
-    String url = API_URL + "instances/" + sessionId + "/token/" + token + "/send-image";
+    public String enviarVideoParaContato(String telefone, String nome, String legendaPersonalizada, List<String> midiasUrl) {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = API_URL + "instances/" + sessionId + "/token/" + token + "/send-image";
 
-    telefone = formatarNumero(telefone);
-    if (telefone == null) {
-        return "❌ Número inválido!";
-    }
-
-    StringBuilder respostas = new StringBuilder();
-
-    for (String midiaUrl : midiasUrl) {
-        try {
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("phone", telefone);
-            requestBody.put("image", midiaUrl);
-            // Só adiciona legenda se não for vazia
-            if (legendaPersonalizada != null && !legendaPersonalizada.isEmpty()) {
-                requestBody.put("caption", legendaPersonalizada);
-            }
-            requestBody.put("viewOnce", false);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Content-Type", "application/json");
-            headers.set("Client-Token", clientToken);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-            respostas.append("✅ Enviado: ").append(midiaUrl).append("\n");
-
-            // Salva no banco
-            Mensagem mensagem = new Mensagem();
-            mensagem.setNome(nome);
-            mensagem.setTelefone(telefone);
-            mensagem.setMensagemGerada((legendaPersonalizada != null ? legendaPersonalizada : "") + midiaUrl);
-            mensagem.setDescricao("Mídia promocional enviada via Z-API.");
-            mensagem.setDataEnvio(new Date());
-            mensagemRepository.save(mensagem);
-
-            Thread.sleep(2000);
-
-        } catch (Exception e) {
-            respostas.append("❌ Erro ao enviar ").append(midiaUrl).append(": ").append(e.getMessage()).append("\n");
+        telefone = formatarNumero(telefone);
+        if (telefone == null) {
+            return "❌ Número inválido!";
         }
+
+        StringBuilder respostas = new StringBuilder();
+
+        for (String midiaUrl : midiasUrl) {
+            try {
+                Map<String, Object> requestBody = new HashMap<>();
+                requestBody.put("phone", telefone);
+                requestBody.put("image", midiaUrl);
+                if (legendaPersonalizada != null && !legendaPersonalizada.isEmpty()) {
+                    requestBody.put("caption", legendaPersonalizada);
+                }
+                requestBody.put("viewOnce", false);
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Content-Type", "application/json");
+                headers.set("Client-Token", clientToken);
+                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+                respostas.append("✅ Enviado: ").append(midiaUrl).append("\n");
+
+                // Salva no banco
+                Mensagem mensagem = new Mensagem();
+                mensagem.setNome(nome);
+                mensagem.setTelefone(telefone);
+                mensagem.setMensagemGerada((legendaPersonalizada != null ? legendaPersonalizada : "") + midiaUrl);
+                mensagem.setDataEnvio(LocalDateTime.now()); // Correção aqui
+                mensagemRepository.save(mensagem);
+
+                Thread.sleep(2000);
+
+            } catch (Exception e) {
+                respostas.append("❌ Erro ao enviar ").append(midiaUrl).append(": ").append(e.getMessage()).append("\n");
+            }
+        }
+
+        return respostas.toString();
     }
-
-    return respostas.toString();
-}
-
 
     public static String formatarNumero(String telefone) {
         if (telefone == null || telefone.trim().isEmpty()) return null;
@@ -153,3 +145,4 @@ public List<String> getMidiasUrl() {
         return formatarNumero(telefone) != null;
     }
 }
+
