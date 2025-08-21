@@ -7,14 +7,20 @@ import com.exemplo.service.OpenAIService;
 import com.exemplo.service.MensagemService;
 import com.exemplo.service.WhatsAppService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.StringUtils;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+
+
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 
@@ -37,6 +43,7 @@ public class ParabensController {
     @Autowired
     private WhatsAppService whatsAppService;
 
+
     private String getContentType(File file) throws IOException {
         Path path = file.toPath();
         return Files.probeContentType(path);
@@ -45,6 +52,7 @@ public class ParabensController {
     @GetMapping("/tempo")
     public String Envio() throws Exception {
         String filePath = "C:/Feedback.xlsx";
+
         File file = new File(filePath);
         if (!file.exists() || !file.isFile()) {
             return "Arquivo não encontrado no caminho: " + filePath;
@@ -81,7 +89,11 @@ public class ParabensController {
             String mensagem = mensagemService.mensagemFeedback(contato.getNome());
 
             try {
-                whatsAppService.enviarMensagem(contato.getTelefone(), contato.getNome(), mensagem);
+                String resposta = whatsAppService.enviarMensagem(
+                    contato.getTelefone(),
+                    contato.getNome(),
+                    mensagem
+                );
                 System.out.printf("[%d/%d] Enviado para: %s\n", i + 1, totalMensagens, contato.getNome());
             } catch (Exception e) {
                 System.err.println("Falha ao enviar mensagem para " + contato.getNome() + ": " + e.getMessage());
@@ -121,6 +133,7 @@ public class ParabensController {
     @GetMapping("/enviar")
     public String enviarParabens() throws Exception {
         String filePath = "C:/Contatos_otica.xlsx";
+
         File file = new File(filePath);
         if (!file.exists() || !file.isFile()) {
             return "Arquivo não encontrado no caminho: " + filePath;
@@ -146,10 +159,16 @@ public class ParabensController {
             }
 
             String mensagem = mensagemService.mensagemPosCompra(contato.getNome());
+
             System.out.println("Enviando mensagem para " + contato.getNome() + " (" + contato.getTelefone() + ")");
 
             try {
-                whatsAppService.enviarMensagem(contato.getTelefone(), contato.getNome(), mensagem);
+                String resposta = whatsAppService.enviarMensagem(
+                    contato.getTelefone(),
+                    contato.getNome(),
+                    mensagem
+                );
+                System.out.println("Resposta da API para " + contato.getNome() + ": " + resposta);
             } catch (Exception e) {
                 System.err.println("Falha ao enviar mensagem para " + contato.getNome() + ": " + e.getMessage());
                 e.printStackTrace();
@@ -163,7 +182,7 @@ public class ParabensController {
 
     @GetMapping("/video")
 public String enviarComVideo() throws Exception {
-    String filePath = "/root/disparo/Rotina-de-Parab-ns-/parabens-whatsapp/lista3.xlsx";
+    String filePath = "/root/disparo/Rotina-de-Parab-ns-/parabens-whatsapp/lista4.xlsx";
     int limiteDiario = 900;
 
     File file = new File(filePath);
@@ -184,7 +203,7 @@ public String enviarComVideo() throws Exception {
     int totalMensagens = contatos.size();
     System.out.println("Total de pessoas encontradas: " + totalMensagens);
 
-    // Ler índice do último enviado
+        // Ler índice do último enviado
     Path controlePath = Paths.get("/root/disparo/ultimo_enviado.txt");
     int indiceInicio = 0;
     if (Files.exists(controlePath)) {
@@ -198,6 +217,8 @@ public String enviarComVideo() throws Exception {
 
     Random random = new Random();
     long tempoInicio = System.currentTimeMillis();
+
+
     int enviadoHoje = 0;
 
     int tempoMinimoPorEnvio = 55000;
@@ -207,28 +228,29 @@ public String enviarComVideo() throws Exception {
         Contato contato = contatos.get(i);
         if (!StringUtils.hasText(contato.getTelefone())) continue;
 
-        String legendaPersonalizada = mensagemService.mensagemVideo(contato.getNome());
+        String mensagemPersonalizada = mensagemService.mensagemVideo(contato.getNome());
 
         try {
-            whatsAppService.enviarMensagem(contato.getTelefone(), contato.getNome(), legendaPersonalizada);
+            // Envia a mensagem usando somente o enviarMensagem
+            String resposta = whatsAppService.enviarMensagem(
+                contato.getTelefone(),
+                contato.getNome(),
+                mensagemPersonalizada
+            );
+            System.out.println("✅ Mensagem enviada para: " + contato.getNome());
+            System.out.println("Resposta da API para " + contato.getNome() + ": " + resposta);
         } catch (Exception e) {
-            System.err.println("Erro ao enviar texto para " + contato.getNome() + ": " + e.getMessage());
-        }
-
-        try {
-            whatsAppService.enviarVideoParaContato(contato.getTelefone(), contato.getNome(), "",
-                    whatsAppService.getMidiasUrl());
-        } catch (Exception e) {
-            System.err.println("Erro ao enviar vídeo para " + contato.getNome() + ": " + e.getMessage());
+            System.err.println("❌ Erro ao enviar texto para " + contato.getNome() + ": " + e.getMessage());
         }
 
         enviadoHoje++;
 
-        // 🔹 Atualiza o último índice logo após o envio
+         // 🔹 Atualiza o último índice logo após o envio
         Files.writeString(controlePath, String.valueOf(i + 1),
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-        // PAUSAS adaptadas do /tempo
+
+        // Pausas entre envios
         if (i > 0 && i % 50 == 0) {
             int pausaLonga = 1000 * (60 + random.nextInt(180)); // entre 60s e 240s
             int minutos = pausaLonga / 60000;
@@ -239,7 +261,7 @@ public String enviarComVideo() throws Exception {
             Thread.sleep(delayAleatorio);
         }
 
-
+        // Exibir progresso
         long tempoAtual = System.currentTimeMillis();
         long tempoDecorrido = tempoAtual - tempoInicio;
         int restantes = totalMensagens - (i + 1);
@@ -258,7 +280,8 @@ public String enviarComVideo() throws Exception {
 
     System.out.println("✅ Enviadas " + enviadoHoje + " mensagens hoje!");
     return enviadoHoje + " mensagens enviadas com sucesso!";
- }
-
 }
 
+
+
+}

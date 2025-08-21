@@ -121,45 +121,44 @@ public class WhatsAppService {
     }
 
     public static String formatarNumero(String telefone) {
-        if (telefone == null || telefone.trim().isEmpty()) return null;
+    if (telefone == null || telefone.trim().isEmpty()) return null;
 
-        // Remove tudo que não for dígito
-        telefone = telefone.replaceAll("[^\\d]", "");
+    // Remove tudo que não for dígito
+    telefone = telefone.replaceAll("[^\\d]", "");
 
-        // Verifica se começa com 55
-        if (!telefone.startsWith("55")) {
-            return null; // descarta
-        }
-
-        // Remove o 55 inicial para processar o DDD e número
-        String numeroSem55 = telefone.substring(2);
-
-        // Verifica se tem DDD válido (pelo menos 10 dígitos depois do 55)
-        if (numeroSem55.length() < 10) {
-            return null;
-        }
-
-        String ddd = numeroSem55.substring(0, 2);
-        String numero = numeroSem55.substring(2);
-
-        // Adiciona 9 se número tiver 8 dígitos
-        if (numero.length() == 8) {
-            numero = "9" + numero;
-        }
-
-        // Combina tudo
-        telefone = "55" + ddd + numero;
-
-        // Verifica se tem 13 dígitos
-        if (telefone.length() != 13) {
-            return null;
-        }
-
-        return "+" + telefone;
+    // Adiciona 55 se não começar
+    if (!telefone.startsWith("55")) {
+        telefone = "55" + telefone;
     }
+
+    // Remove o 55 inicial para processar o DDD e número
+    String numeroSem55 = telefone.substring(2);
+
+    if (numeroSem55.length() < 10) {
+        return null;
+    }
+
+    String ddd = numeroSem55.substring(0, 2);
+    String numero = numeroSem55.substring(2);
+
+    // Adiciona 9 se número tiver 8 dígitos
+    if (numero.length() == 8) {
+        numero = "9" + numero;
+    }
+
+    telefone = "55" + ddd + numero;
+
+    if (telefone.length() != 13) {
+        return null;
+    }
+
+    return "+" + telefone;
+}
+
 
     public static boolean isNumeroValido(String telefone) {
         return formatarNumero(telefone) != null;
     }
 }
+
 

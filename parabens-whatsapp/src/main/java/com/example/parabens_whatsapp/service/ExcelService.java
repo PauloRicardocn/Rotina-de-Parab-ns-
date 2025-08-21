@@ -5,10 +5,10 @@ import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ExcelService {
@@ -24,25 +24,31 @@ public class ExcelService {
             for (Row row : sheet) {
                 if (row.getRowNum() == 0) continue; // Pular cabeçalho
 
-                Contato contato = new Contato();
+                // Ler células com segurança, mesmo que estejam vazias
+                Cell nomeCell = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                Cell telefoneCell = row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 
-                // Nome
-                Cell nomeCell = row.getCell(0);
-                contato.setNome(nomeCell != null ? nomeCell.getStringCellValue().trim() : "");
+                String nome = nomeCell.getStringCellValue().trim();
 
-
-                // Telefone (tratamento para evitar notação científica)
-                Cell telefoneCell = row.getCell(1);
-                if (telefoneCell != null) {
-                    if (telefoneCell.getCellType() == CellType.STRING) {
-                        contato.setTelefone(telefoneCell.getStringCellValue().trim());
-                    } else if (telefoneCell.getCellType() == CellType.NUMERIC) {
-                        contato.setTelefone(String.valueOf((long) telefoneCell.getNumericCellValue()));
-                    }
+                String telefone = "";
+                if (telefoneCell.getCellType() == CellType.STRING) {
+                    telefone = telefoneCell.getStringCellValue().trim();
+                } else if (telefoneCell.getCellType() == CellType.NUMERIC) {
+                    telefone = String.valueOf((long) telefoneCell.getNumericCellValue());
                 }
 
-                contatos.add(contato);
+                // Limpar espaços e caracteres que não sejam números
+                telefone = telefone.replaceAll("[^0-9]", "");
+
+                // Adiciona apenas contatos válidos
+                if (!nome.isEmpty() && !telefone.isEmpty()) {
+                    Contato contato = new Contato();
+                    contato.setNome(nome);
+                    contato.setTelefone(telefone);
+                    contatos.add(contato);
+                }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -50,3 +56,4 @@ public class ExcelService {
         return contatos;
     }
 }
+

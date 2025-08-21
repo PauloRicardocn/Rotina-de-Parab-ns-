@@ -28,13 +28,10 @@ public class MensagemService {
     }
 
 public String mensagemVideo(String nome) {
-    return nome + ", VOLTEI DA LICENÇA!!!\n\n" +
-           "*OFERTA DO ANO:*\n\n" +
-           "📢 Você vai comprar o seu *CARRO* 🚘 ou construir/comprar seu *IMÓVEL* 🏡 nos próximos meses?\n\n" +
-           "Ou *DESEJA QUITAR SEU FINANCIAMENTO IMOBILIÁRIO?*\n\n" +
-           "Eu tenho a oferta certa pra você!\n\n" +
-           "💥 Fale comigo agora e descubra:\n" +
-           "*AS CONDIÇÕES DO ANO – PORTOBANK*";
+    return nome + ", " +
+           "Você já pensou em trocar de *carro* 🚘 ou comprar um *imóvel* 🏡 pagando menos da metade da parcela de um financiamento? 🤔\n\n" +
+           "Quer que eu te mostre como funciona?";
 }
 
 }
+
