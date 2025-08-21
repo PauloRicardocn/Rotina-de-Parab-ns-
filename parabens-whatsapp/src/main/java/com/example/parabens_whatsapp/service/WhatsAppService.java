@@ -47,6 +47,9 @@ public class WhatsAppService {
         String url = API_URL + "instances/" + sessionId + "/token/" + token + "/send-text";
 
         telefone = formatarNumero(telefone);
+        if (telefone == null) {
+            return "❌ Número inválido!";
+        }
 
         Map<String, String> requestBody = new HashMap<>();
         requestBody.put("phone", telefone);
@@ -63,8 +66,8 @@ public class WhatsAppService {
         Mensagem mensagem = new Mensagem();
         mensagem.setNome(nome);
         mensagem.setTelefone(telefone);
-        mensagem.setMensagemGerada(mensagemGerada); // Correção aqui
-        mensagem.setDataEnvio(LocalDateTime.now());   // Correção aqui
+        mensagem.setMensagemGerada(mensagemGerada);
+        mensagem.setDataEnvio(LocalDateTime.now());
         mensagemRepository.save(mensagem);
 
         return response.getBody();
@@ -104,7 +107,7 @@ public class WhatsAppService {
                 mensagem.setNome(nome);
                 mensagem.setTelefone(telefone);
                 mensagem.setMensagemGerada((legendaPersonalizada != null ? legendaPersonalizada : "") + midiaUrl);
-                mensagem.setDataEnvio(LocalDateTime.now()); // Correção aqui
+                mensagem.setDataEnvio(LocalDateTime.now());
                 mensagemRepository.save(mensagem);
 
                 Thread.sleep(2000);
@@ -119,25 +122,39 @@ public class WhatsAppService {
 
     public static String formatarNumero(String telefone) {
         if (telefone == null || telefone.trim().isEmpty()) return null;
+
+        // Remove tudo que não for dígito
         telefone = telefone.replaceAll("[^\\d]", "");
-        if (telefone.length() >= 12 && telefone.startsWith("0")) {
-            telefone = telefone.substring(1);
-        }
-        if (telefone.length() == 10) {
-            String ddd = telefone.substring(0, 2);
-            String numero = telefone.substring(2);
-            if (numero.length() == 8) {
-                numero = "9" + numero;
-            }
-            telefone = ddd + numero;
-        }
+
+        // Verifica se começa com 55
         if (!telefone.startsWith("55")) {
-            telefone = "55" + telefone;
+            return null; // descarta
         }
-        if (telefone.length() != 13) {
-            System.err.println("❌ Número inválido: " + telefone);
+
+        // Remove o 55 inicial para processar o DDD e número
+        String numeroSem55 = telefone.substring(2);
+
+        // Verifica se tem DDD válido (pelo menos 10 dígitos depois do 55)
+        if (numeroSem55.length() < 10) {
             return null;
         }
+
+        String ddd = numeroSem55.substring(0, 2);
+        String numero = numeroSem55.substring(2);
+
+        // Adiciona 9 se número tiver 8 dígitos
+        if (numero.length() == 8) {
+            numero = "9" + numero;
+        }
+
+        // Combina tudo
+        telefone = "55" + ddd + numero;
+
+        // Verifica se tem 13 dígitos
+        if (telefone.length() != 13) {
+            return null;
+        }
+
         return "+" + telefone;
     }
 
