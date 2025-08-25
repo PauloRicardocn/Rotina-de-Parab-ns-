@@ -34,8 +34,7 @@ public class WhatsAppService {
     private static final String API_URL = "https://api.z-api.io/";
 
     List<String> midiasUrl = List.of(
-        "https://drive.google.com/uc?export=download&id=1iV8pD5Tdcv2P89iNf4S_xhuTPVZaXxlo",
-        "https://drive.google.com/uc?export=download&id=1F7MTcsxVCEaCdVlgRE7EKHBoeepY3WzV"
+        "https://drive.google.com/uc?export=download&id=1nKlN6aEgxO3P8q0YQsJSMARn60IgVnC4"
     );
 
     public List<String> getMidiasUrl() {

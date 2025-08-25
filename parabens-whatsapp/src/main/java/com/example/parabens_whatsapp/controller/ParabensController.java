@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.util.StringUtils;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalTime;
 
 
 
@@ -182,7 +183,14 @@ public class ParabensController {
 
     @GetMapping("/video")
 public String enviarComVideo() throws Exception {
-    String filePath = "/root/disparo/Rotina-de-Parab-ns-/parabens-whatsapp/lista4.xlsx";
+    // 🔹 Se for 18h ou depois, interrompe
+    LocalTime agora = LocalTime.now();
+    if (agora.isAfter(LocalTime.of(18, 0))) {
+        System.out.println("⏹ Parando execução porque já passou das 18h.");
+        return "Execução interrompida: horário limite (18h) atingido.";
+    }
+
+    String filePath = "/root/disparo/Rotina-de-Parab-ns-/parabens-whatsapp/lista5.xlsx";
     int limiteDiario = 900;
 
     File file = new File(filePath);
@@ -203,7 +211,6 @@ public String enviarComVideo() throws Exception {
     int totalMensagens = contatos.size();
     System.out.println("Total de pessoas encontradas: " + totalMensagens);
 
-        // Ler índice do último enviado
     Path controlePath = Paths.get("/root/disparo/ultimo_enviado.txt");
     int indiceInicio = 0;
     if (Files.exists(controlePath)) {
@@ -217,51 +224,54 @@ public String enviarComVideo() throws Exception {
 
     Random random = new Random();
     long tempoInicio = System.currentTimeMillis();
-
-
     int enviadoHoje = 0;
 
-    int tempoMinimoPorEnvio = 55000;
+    int tempoMinimoPorEnvio = 45000;
     int tempoMaximoPorEnvio = 65000;
 
     for (int i = indiceInicio; i < totalMensagens && enviadoHoje < limiteDiario; i++) {
+
+        // 🔹 Checa horário a cada loop também
+        agora = LocalTime.now();
+        if (agora.isAfter(LocalTime.of(18, 0))) {
+            System.out.println("⏹ Execução interrompida às " + agora);
+            return "Execução parada: passou das 18h.";
+        }
+
         Contato contato = contatos.get(i);
         if (!StringUtils.hasText(contato.getTelefone())) continue;
 
         String mensagemPersonalizada = mensagemService.mensagemVideo(contato.getNome());
 
         try {
-            // Envia a mensagem usando somente o enviarMensagem
-            String resposta = whatsAppService.enviarMensagem(
+            // 🔹 Aqui trocamos para envio de foto(s)
+            String resposta = whatsAppService.enviarVideoParaContato(
                 contato.getTelefone(),
                 contato.getNome(),
-                mensagemPersonalizada
+                mensagemPersonalizada,
+                whatsAppService.getMidiasUrl() // usa as URLs definidas no service
             );
-            System.out.println("✅ Mensagem enviada para: " + contato.getNome());
+            System.out.println("✅ Mensagem com mídia enviada para: " + contato.getNome());
             System.out.println("Resposta da API para " + contato.getNome() + ": " + resposta);
         } catch (Exception e) {
-            System.err.println("❌ Erro ao enviar texto para " + contato.getNome() + ": " + e.getMessage());
+            System.err.println("❌ Erro ao enviar mídia para " + contato.getNome() + ": " + e.getMessage());
         }
 
         enviadoHoje++;
 
-         // 🔹 Atualiza o último índice logo após o envio
         Files.writeString(controlePath, String.valueOf(i + 1),
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-
-        // Pausas entre envios
         if (i > 0 && i % 50 == 0) {
-            int pausaLonga = 1000 * (60 + random.nextInt(180)); // entre 60s e 240s
+            int pausaLonga = 1000 * (60 + random.nextInt(180));
             int minutos = pausaLonga / 60000;
-            System.out.println("⏸ Pausa prolongada de " + minutos + " minuto(s) entre blocos...");
+            System.out.println("⏸ Pausa prolongada de " + minutos + " minuto(s)...");
             Thread.sleep(pausaLonga);
         } else {
             int delayAleatorio = tempoMinimoPorEnvio + random.nextInt(tempoMaximoPorEnvio - tempoMinimoPorEnvio + 1);
             Thread.sleep(delayAleatorio);
         }
 
-        // Exibir progresso
         long tempoAtual = System.currentTimeMillis();
         long tempoDecorrido = tempoAtual - tempoInicio;
         int restantes = totalMensagens - (i + 1);
@@ -270,7 +280,6 @@ public String enviarComVideo() throws Exception {
         int barraTamanho = 30;
         int preenchido = (int) ((i + 1) * barraTamanho / totalMensagens);
         String barra = "[" + "=".repeat(preenchido) + " ".repeat(barraTamanho - preenchido) + "]";
-
         System.out.printf("Progresso: %s %d%% | ⏱ Estimativa restante: ~%d min\n",
                 barra,
                 (i + 1) * 100 / totalMensagens,
@@ -283,5 +292,110 @@ public String enviarComVideo() throws Exception {
 }
 
 
+@GetMapping("/texto")
+public String enviarComVideo() throws Exception {
+    // 🔹 Se for 18h ou depois, interrompe
+    LocalTime agora = LocalTime.now();
+    if (agora.isAfter(LocalTime.of(18, 0))) {
+        System.out.println("⏹ Parando execução porque já passou das 18h.");
+        return "Execução interrompida: horário limite (18h) atingido.";
+    }
+
+    String filePath = "/root/disparo/Rotina-de-Parab-ns-/parabens-whatsapp/lista5.xlsx";
+    int limiteDiario = 900;
+
+    File file = new File(filePath);
+    if (!file.exists() || !file.isFile()) {
+        return "Arquivo não encontrado no caminho: " + filePath;
+    }
+
+    String contentType = getContentType(file);
+    List<Contato> contatos;
+    if ("application/pdf".equals(contentType)) {
+        contatos = pdfService.lerPdf(file);
+    } else if ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".equals(contentType)) {
+        contatos = excelService.lerExcel(file);
+ } else {
+        return "Formato de arquivo não suportado!";
+    }
+
+    int totalMensagens = contatos.size();
+    System.out.println("Total de pessoas encontradas: " + totalMensagens);
+
+    Path controlePath = Paths.get("/root/disparo/ultimo_enviado.txt");
+    int indiceInicio = 0;
+    if (Files.exists(controlePath)) {
+        String linha = Files.readString(controlePath).trim();
+        if (!linha.isEmpty()) {
+            indiceInicio = Integer.parseInt(linha);
+        }
+    }
+
+    System.out.println("Iniciando do contato: " + (indiceInicio + 1));
+
+    Random random = new Random();
+    long tempoInicio = System.currentTimeMillis();
+    int enviadoHoje = 0;
+
+    int tempoMinimoPorEnvio = 45000;
+    int tempoMaximoPorEnvio = 65000;
+ for (int i = indiceInicio; i < totalMensagens && enviadoHoje < limiteDiario; i++) {
+
+        // 🔹 Checa horário a cada loop também
+        agora = LocalTime.now();
+        if (agora.isAfter(LocalTime.of(18, 0))) {
+            System.out.println("⏹ Execução interrompida às " + agora);
+            return "Execução parada: passou das 18h.";
+        }
+
+        Contato contato = contatos.get(i);
+        if (!StringUtils.hasText(contato.getTelefone())) continue;
+
+        String mensagemPersonalizada = mensagemService.mensagemVideo(contato.getNome());
+
+        try {
+            String resposta = whatsAppService.enviarMensagem(
+                contato.getTelefone(),
+                contato.getNome(),
+                mensagemPersonalizada
+            );
+            System.out.println("✅ Mensagem enviada para: " + contato.getNome());
+            System.out.println("Resposta da API para " + contato.getNome() + ": " + resposta);
+        } catch (Exception e) {
+            System.err.println("❌ Erro ao enviar texto para " + contato.getNome() + ": " + e.getMessage());
+        }
+enviadoHoje++;
+
+        Files.writeString(controlePath, String.valueOf(i + 1),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+        if (i > 0 && i % 50 == 0) {
+            int pausaLonga = 1000 * (60 + random.nextInt(180));
+            int minutos = pausaLonga / 60000;
+            System.out.println("⏸ Pausa prolongada de " + minutos + " minuto(s)...");
+            Thread.sleep(pausaLonga);
+        } else {
+            int delayAleatorio = tempoMinimoPorEnvio + random.nextInt(tempoMaximoPorEnvio - tempoMinimoPorEnvio + 1);
+            Thread.sleep(delayAleatorio);
+        }
+
+        long tempoAtual = System.currentTimeMillis();
+        long tempoDecorrido = tempoAtual - tempoInicio;
+        int restantes = totalMensagens - (i + 1);
+        long estimativaRestante = (tempoDecorrido / (i + 1)) * restantes;
+
+        int barraTamanho = 30;
+        int preenchido = (int) ((i + 1) * barraTamanho / totalMensagens);
+        String barra = "[" + "=".repeat(preenchido) + " ".repeat(barraTamanho - preenchido) + "]";
+ System.out.printf("Progresso: %s %d%% | ⏱ Estimativa restante: ~%d min\n",
+                barra,
+                (i + 1) * 100 / totalMensagens,
+                estimativaRestante / 60000
+        );
+    }
+
+    System.out.println("✅ Enviadas " + enviadoHoje + " mensagens hoje!");
+    return enviadoHoje + " mensagens enviadas com sucesso!";
+}
 
 }

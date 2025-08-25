@@ -28,10 +28,19 @@ public class MensagemService {
     }
 
 public String mensagemVideo(String nome) {
-    return nome + ", " +
-           "Você já pensou em trocar de *carro* 🚘 ou comprar um *imóvel* 🏡 pagando menos da metade da parcela de um financiamento? 🤔\n\n" +
-           "Quer que eu te mostre como funciona?";
+    return "🏢 Oferta Exclusiva para Pessoa Jurídica – PortoBank\n\n" +
+           nome + ", já pensou em comprar ou construir um imóvel de alto valor 🏡 sem entrada e com taxa de apenas 0,09% a.m?\n\n" +
+           "Olha esse exemplo real: 👇\n\n" +
+           "📌 Plano Pessoa Jurídica\n" +
+           "💰 Crédito: R$ 1.000.000,00\n" +
+           "⏳ Prazo: 200 meses\n" +
+           "💳 Parcela: R$ 5.975,00\n\n" +
+           "✨ Mas atenção: até a contemplação, você pode reduzir sua parcela em 50% e pagar apenas R$ 2.987,50.\n\n" +
+           "🔥 Benefício Extra: clientes Grupo Porto têm 10% de desconto na taxa.\n" +
+           "⏰ Promoção válida até 31/08.\n\n" +
+           "📲 Garanta já essa oportunidade e invista no futuro da sua empresa!";
 }
+
 
 }
 
